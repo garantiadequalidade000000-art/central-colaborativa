@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central Colaborativa Cloud</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --input-bg: rgba(0, 0, 0, 0.2);
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(to right, #60a5fa, #a855f7);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        select,
+        textarea,
+        input[type="text"] {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input[type="text"]:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .file-upload {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            border: 2px dashed var(--card-border);
+            border-radius: 12px;
+            cursor: pointer;
+            background: var(--input-bg);
+        }
+
+        .file-upload input {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .preview-container {
+            margin-top: 12px;
+            display: none;
+            position: relative;
+        }
+
+        .preview-container img {
+            width: 100%;
+            border-radius: 8px;
+            max-height: 150px;
+            object-fit: cover;
+        }
+
+        button.btn-submit {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button.btn-submit:disabled {
+            opacity: 0.5;
+            background: #475569;
+        }
+
+        #status {
+            margin-top: 20px;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .status-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            display: block !important;
+        }
+
+        .status-loading {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary);
+            display: block !important;
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+            display: block !important;
+        }
+
+        /* Progress Bar */
+        .progress-wrapper {
+            margin-top: 15px;
+            display: none;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 5px;
+            display: block;
+            text-align: right;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: #1e293b;
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 32px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: modalPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes modalPop {
+            0% {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            color: var(--success);
+        }
+
+        .modal-header h2 {
+            font-size: 22px;
+            color: var(--text-main);
+        }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .info-row {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .info-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .info-value {
+            font-size: 14px;
+            color: var(--text-main);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 14px;
+            border-radius: 10px;
+            word-break: break-all;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .copy-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .copy-group .info-value {
+            flex: 1;
+        }
+
+        .btn-copy {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            width: 42px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .btn-copy:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-close-modal {
+            margin-top: 32px;
+            width: 100%;
+            background: linear-gradient(to right, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-close-modal:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
+
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+        }
+
+        select option {
+            background: #1e293b;
+            color: #f8fafc;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>Central Colaborativa</h1>
+            <p>Envie sua sugestão ou reporte um erro</p>
+        </div>
+
+        <div class="form-group">
+            <label>Colaborador</label>
+            <input type="text" id="colaborador" placeholder="Seu nome" class="input-field">
+        </div>
+
+        <div class="form-group">
+            <label>Cliente</label>
+            <input type="text" id="cliente" placeholder="Nome do cliente" class="input-field">
+        </div>
+
+        <div class="form-group">
+            <label>Tipo de Registro</label>
+            <select id="tipo">
+                <option value="Sugestão">💡 Sugestão de Melhoria</option>
+                <option value="Bug">🐞 Relatar Erro/Bug</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Descrição Detalhada</label>
+            <textarea id="descricao" placeholder="O que aconteceu?"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Anexo (Opcional: Imagem, Vídeo, Áudio, PDF, ZIP)</label>
+            <div class="file-upload">
+                <input type="file" id="arquivo" accept="image/*,video/*,audio/*,.pdf,.zip">
+                <i data-lucide="upload-cloud"></i>
+                <span id="file-label">Selecionar arquivo</span>
+            </div>
+            <div class="preview-container" id="previewContainer">
+                <img id="imagePreview">
+            </div>
+        </div>
+
+        <button id="btnEnviar" class="btn-submit" onclick="processarEnvio()">Enviar Registro</button>
+
+        <div class="progress-wrapper" id="progressWrapper">
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="progressBar"></div>
+            </div>
+            <span class="progress-text" id="progressText">0%</span>
+        </div>
+
+        <div id="status"></div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i data-lucide="check-circle-2"></i>
+                <h2>Registro Concluído!</h2>
+            </div>
+            <div class="modal-body">
+                <div class="info-row">
+                    <span class="info-label">Colaborador</span>
+                    <span class="info-value" id="m-colab"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Cliente</span>
+                    <span class="info-value" id="m-cliente"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Tipo</span>
+                    <span class="info-value" id="m-tipo"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Descrição</span>
+                    <span class="info-value" id="m-desc"></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Link do Anexo</span>
+                    <div class="copy-group">
+                        <span class="info-value" id="m-link"></span>
+                        <button class="btn-copy" onclick="copiarLink()" title="Copiar Link">
+                            <i data-lucide="copy"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-close-modal" onclick="location.reload()">Novo Registro</button>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // --- CONFIGURAÇÕES ---
+        const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/dzql3w87i/auto/upload';
+        const CLOUDINARY_PRESET = 'base_dados';
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxrF7iezUv55jNlWs6HHK5-GNjGX9BqoKYWxzX_uALKOxwivryhfav2LQUnA8leDHoJGg/exec';
+
+        const inputArquivo = document.getElementById('arquivo');
+        const previewContainer = document.getElementById('previewContainer');
+        const imagePreview = document.getElementById('imagePreview');
+        const fileLabel = document.getElementById('file-label');
+
+        // Lógica para preview da imagem
+        inputArquivo.addEventListener('change', function () {
+            if (this.files[0]) {
+                const file = this.files[0];
+                fileLabel.innerText = file.name;
+
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        imagePreview.src = e.target.result;
+                        previewContainer.style.display = 'block';
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    previewContainer.style.display = 'none';
+                    // Poderíamos adicionar um ícone aqui futuramente, por enquanto apenas esconde o preview de imagem
+                }
+            }
+        });
+
+        function uploadComProgresso(file) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("upload_preset", CLOUDINARY_PRESET);
+                formData.append("folder", "banco/dados");
+
+                const wrapper = document.getElementById('progressWrapper');
+                const bar = document.getElementById('progressBar');
+                const text = document.getElementById('progressText');
+
+                wrapper.style.display = 'block';
+
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        bar.style.width = percent + '%';
+                        text.innerText = percent + '%';
+                    }
+                };
+
+                xhr.onload = () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        resolve(JSON.parse(xhr.responseText));
+                    } else {
+                        reject(JSON.parse(xhr.responseText || '{}'));
+                    }
+                };
+
+                xhr.onerror = () => reject(new Error("Erro de conexão"));
+
+                xhr.open("POST", CLOUDINARY_URL);
+                xhr.send(formData);
+            });
+        }
+
+        async function processarEnvio() {
+            const btn = document.getElementById('btnEnviar');
+            const colaborador = document.getElementById('colaborador').value.trim();
+            const cliente = document.getElementById('cliente').value.trim();
+            const descricao = document.getElementById('descricao').value.trim();
+            const tipo = document.getElementById('tipo').value;
+
+            if (!colaborador || !cliente || !descricao) {
+                alert("Por favor, preencha todos os campos obrigatórios.");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "Enviando...";
+            showStatus("Processando registro...", "loading");
+
+            let urlArquivo = "Sem anexo";
+
+            try {
+                // 1. Upload para Cloudinary se houver arquivo
+                if (inputArquivo.files.length > 0) {
+                    showStatus("Enviando arquivo para a nuvem...", "loading");
+
+                    try {
+                        const resData = await uploadComProgresso(inputArquivo.files[0]);
+
+                        if (resData.secure_url) {
+                            urlArquivo = resData.secure_url;
+                        } else {
+                            throw new Error("URL não retornada pelo Cloudinary");
+                        }
+                    } catch (e) {
+                        console.error("Erro fatal no upload:", e);
+                        showStatus("❌ Falha ao subir arquivo. O registro não foi enviado.", "error");
+                        btn.disabled = false;
+                        btn.innerText = "Enviar Registro";
+                        return;
+                    }
+                }
+
+                showStatus("Salvando registro na planilha...", "loading");
+
+                // 2. Preparar dados para o Apps Script
+                const dados = new URLSearchParams({
+                    data: new Date().toLocaleString('pt-BR'),
+                    colaborador: colaborador,
+                    cliente: cliente,
+                    tipo: tipo,
+                    descricao: descricao,
+                    url_arquivo: urlArquivo
+                });
+
+                // 3. Envio para Google Apps Script
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: dados.toString()
+                });
+
+                showStatus("✅ Enviado com sucesso!", "success");
+
+                // Mostrar Modal de Sucesso
+                document.getElementById('m-colab').innerText = colaborador;
+                document.getElementById('m-cliente').innerText = cliente;
+                document.getElementById('m-tipo').innerText = tipo;
+                document.getElementById('m-desc').innerText = descricao;
+                document.getElementById('m-link').innerText = urlArquivo;
+                document.getElementById('modalOverlay').style.display = 'flex';
+
+                lucide.createIcons();
+
+            } catch (error) {
+                console.error("Erro no envio:", error);
+                showStatus("❌ Erro ao enviar. Verifique o console.", "error");
+                btn.disabled = false;
+                btn.innerText = "Enviar Registro";
+            }
+        }
+
+        function copiarLink() {
+            const link = document.getElementById('m-link').innerText;
+            navigator.clipboard.writeText(link).then(() => {
+                const btn = document.querySelector('.btn-copy');
+                const originalContent = btn.innerHTML;
+                btn.innerHTML = '<i data-lucide="check" style="width:18px;height:18px"></i>';
+                lucide.createIcons();
+                setTimeout(() => {
+                    btn.innerHTML = originalContent;
+                    lucide.createIcons();
+                }, 2000);
+            });
+        }
+
+        function showStatus(text, type) {
+            const status = document.getElementById('status');
+            status.innerText = text;
+            status.className = "status-" + type;
+        }
+    </script>
+</body>
+
+</html>
